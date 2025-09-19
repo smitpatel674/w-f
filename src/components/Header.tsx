@@ -32,7 +32,7 @@ const Header = () => {
               <TrendingUp className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-blue-900">MarketPro</h1>
+              <h1 className="text-xl font-bold text-blue-900">Wealth Genius</h1>
               <p className="text-sm text-blue-600">Trading Institute</p>
             </div>
           </Link>

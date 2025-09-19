@@ -49,9 +49,9 @@ const About = () => {
       <section className="py-20 bg-gradient-to-br from-blue-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="about-hero text-center max-w-4xl mx-auto">
-            <h1 className="text-5xl font-bold text-blue-900 mb-6">About MarketPro</h1>
+            <h1 className="text-5xl font-bold text-blue-900 mb-6">About Wealth Genius</h1>
             <p className="text-xl text-gray-600 leading-relaxed mb-8">
-              Founded with a mission to democratize trading education, MarketPro has been empowering individuals 
+              Founded with a mission to democratize trading education, Wealth Genius has been empowering individuals 
               to take control of their financial future through comprehensive market education and practical training.
             </p>
             <div className="flex justify-center">
@@ -70,7 +70,7 @@ const About = () => {
             <div>
               <h2 className="text-4xl font-bold text-blue-900 mb-6">Our Story</h2>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                MarketPro was born from the vision of making professional-level trading education accessible to everyone. 
+                Wealth Genius was born from the vision of making professional-level trading education accessible to everyone. 
                 Our founder, a former Wall Street trader, recognized the gap between theoretical knowledge and practical 
                 application in traditional financial education.
               </p>
@@ -82,11 +82,11 @@ const About = () => {
               <div className="space-y-4">
                 <div className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span className="text-gray-700">Established in 2015</span>
+                  <span className="text-gray-700">Established in 2024</span>
                 </div>
                 <div className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span className="text-gray-700">Over 5,000 successful graduates</span>
+                  <span className="text-gray-700">Over 500 successful graduates</span>
                 </div>
                 <div className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
@@ -161,42 +161,60 @@ const About = () => {
             <p className="text-xl text-gray-600">Seasoned professionals with decades of combined market experience</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div className="team-member text-center">
-              <div className="w-32 h-32 bg-blue-600 rounded-full mx-auto mb-6 flex items-center justify-center text-white text-2xl font-bold">
-                MD
+              <div className="w-32 h-32 mx-auto mb-6 overflow-hidden rounded-full">
+                <img 
+                  src="/images/nainesh-patel.png" 
+                  alt="Nainesh Patel - Founder & CEO"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (fallback) {
+                      fallback.style.display = 'flex';
+                    }
+                  }}
+                />
+                <div className="w-32 h-32 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold" style={{display: 'none'}}>
+                  NP
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Michael Davis</h3>
-              <p className="text-blue-600 font-semibold mb-4">Founder & Chief Instructor</p>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Nainesh Patel</h3>
+              <p className="text-blue-600 font-semibold mb-4">Founder & CEO</p>
               <p className="text-gray-600 text-sm">
-                Former Wall Street trader with 15+ years of experience. Specialized in day trading 
+                Former Wall Street trader with 5+ years of experience. Specialized in day trading 
                 and options strategies with a proven track record of consistent profitability.
               </p>
             </div>
 
             <div className="team-member text-center">
-              <div className="w-32 h-32 bg-blue-600 rounded-full mx-auto mb-6 flex items-center justify-center text-white text-2xl font-bold">
-                SK
+              <div className="w-32 h-32 mx-auto mb-6 overflow-hidden rounded-full">
+                <img 
+                  src="/images/kaushal-patel.png" 
+                  alt="Kaushal Patel - Head of Curriculum"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (fallback) {
+                      fallback.style.display = 'flex';
+                    }
+                  }}
+                />
+                <div className="w-32 h-32 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold" style={{display: 'none'}}>
+                  KP
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Sarah Kim</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Kaushal Patel</h3>
               <p className="text-blue-600 font-semibold mb-4">Head of Curriculum</p>
               <p className="text-gray-600 text-sm">
                 CFA charterholder and former hedge fund manager. Expert in fundamental analysis 
-                and long-term investment strategies with over 12 years of market experience.
+                and long-term investment strategies with over 5 years of market experience.
               </p>
             </div>
 
-            <div className="team-member text-center">
-              <div className="w-32 h-32 bg-blue-600 rounded-full mx-auto mb-6 flex items-center justify-center text-white text-2xl font-bold">
-                JR
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">James Rodriguez</h3>
-              <p className="text-blue-600 font-semibold mb-4">Technical Analysis Expert</p>
-              <p className="text-gray-600 text-sm">
-                Quantitative analyst and algorithmic trading specialist. Masters complex technical 
-                indicators and pattern recognition with 10+ years in institutional trading.
-              </p>
-            </div>
+
           </div>
         </div>
       </section>

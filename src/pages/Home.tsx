@@ -1,13 +1,20 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { 
-  TrendingUp, Users, Award, BookOpen, ArrowRight, CheckCircle, Star, 
-  Play, Shield, Clock, Target, BarChart, PieChart, DollarSign, 
-  Zap, Globe, HeadphonesIcon, Calendar, Phone, Mail
+  TrendingUp, Users, Award, BookOpen, CheckCircle, Star, 
+  Shield, Clock, Target, BarChart, DollarSign, 
+  Zap, Globe, HeadphonesIcon, Phone, Activity, 
+  TrendingDown, ArrowUpRight, ArrowDownRight, Eye, X
 } from 'lucide-react';
 
+gsap.registerPlugin(ScrollTrigger);
+import Interactive3DHero from '../components/Interactive3DHero';
+import ScheduleModal from '../components/ScheduleModal';
+
 const Home = () => {
+  const navigate = useNavigate();
   const heroRef = useRef(null);
   const statsRef = useRef(null);
   const featuresRef = useRef(null);
@@ -16,42 +23,146 @@ const Home = () => {
   const successRef = useRef(null);
   const testimonialsRef = useRef(null);
   const instructorsRef = useRef(null);
-  const pricingRef = useRef(null);
   const faqRef = useRef(null);
   const ctaRef = useRef(null);
+  const marketWidgetRef = useRef(null);
+
+  // Enrollment form state
+  const [showEnrollmentForm, setShowEnrollmentForm] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<any>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    city: '',
+    phone: '',
+    email: ''
+  });
+
+  // Schedule modal state
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+
+  // Form handling functions
+  const handleEnrollClick = (course: any) => {
+    setSelectedCourse(course);
+    setShowEnrollmentForm(true);
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const enrollmentData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        city: formData.city,
+        course_title: selectedCourse?.title,
+        course_price: selectedCourse?.price
+      };
+      
+      const response = await fetch('/api/v1/enrollments/form', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(enrollmentData)
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        alert(result.message);
+        setShowEnrollmentForm(false);
+        setFormData({ name: '', city: '', phone: '', email: '' });
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.detail || 'Failed to submit enrollment'}`);
+      }
+    } catch (error) {
+      console.error('Error submitting enrollment:', error);
+      alert('Failed to submit enrollment. Please try again.');
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const closeModal = () => {
+    setShowEnrollmentForm(false);
+    setFormData({ name: '', city: '', phone: '', email: '' });
+  };
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Hero Animation
-      gsap.timeline()
-        .fromTo('.hero-title', 
-          { opacity: 0, y: 100 }, 
-          { opacity: 1, y: 0, duration: 1.2, ease: "power3.out" }
-        )
-        .fromTo('.hero-subtitle', 
-          { opacity: 0, y: 50 }, 
-          { opacity: 1, y: 0, duration: 0.8 }, "-=0.6"
-        )
-        .fromTo('.hero-cta', 
-          { opacity: 0, scale: 0.8 }, 
-          { opacity: 1, scale: 1, duration: 0.6 }, "-=0.4"
-        )
-        .fromTo('.hero-image', 
-          { opacity: 0, x: 100 }, 
-          { opacity: 1, x: 0, duration: 1 }, "-=0.8"
-        )
-        .fromTo('.floating-card', 
-          { opacity: 0, y: 30, rotation: -5 }, 
-          { opacity: 1, y: 0, rotation: 0, duration: 0.8, stagger: 0.2 }, "-=0.5"
-        );
+      // Check for reduced motion preference
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      
+      // 3D Hero Animation - handled by Three.js component
 
-      // Stats Counter Animation
+      // Enhanced Stats Counter Animation with morphing effects
       gsap.fromTo('.stat-number', 
-        { innerText: 0 },
+        { 
+          innerText: 0, 
+          scale: prefersReducedMotion ? 1 : 0.8, 
+          opacity: 0,
+          rotationX: -90,
+          transformOrigin: "center center"
+        },
         {
-          innerText: (i, el) => el.getAttribute('data-count'),
-          duration: 2.5,
+          innerText: (_i: number, el: any) => el.getAttribute('data-count'),
+          scale: 1,
+          opacity: 1,
+          rotationX: 0,
+          duration: prefersReducedMotion ? 0.1 : 2.5,
           snap: { innerText: 1 },
+          ease: prefersReducedMotion ? "none" : "back.out(1.7)",
+          stagger: prefersReducedMotion ? 0 : 0.2,
+          scrollTrigger: {
+            trigger: statsRef.current,
+            start: "top 80%",
+            end: "bottom 20%",
+            toggleActions: "play none none reverse"
+          }
+        }
+      );
+
+      // Add particle burst effect to stats
+      gsap.utils.toArray('.stat-number').forEach((stat: any) => {
+        ScrollTrigger.create({
+          trigger: stat,
+          start: "top 80%",
+          onEnter: () => {
+            // Create particle burst effect
+            gsap.fromTo(stat, 
+              { 
+                filter: "blur(0px) brightness(1)",
+                boxShadow: "0 0 0px rgba(59, 130, 246, 0)"
+              },
+              { 
+                filter: "blur(2px) brightness(1.5)",
+                boxShadow: "0 0 20px rgba(59, 130, 246, 0.8)",
+                duration: 0.3,
+                yoyo: true,
+                repeat: 1,
+                ease: "power2.inOut"
+              }
+            );
+          }
+        });
+      });
+
+      // Animate stat icons
+      gsap.fromTo('.stat-icon', 
+        { y: 50, opacity: 0, rotation: -180 },
+        {
+          y: 0,
+          opacity: 1,
+          rotation: 0,
+          duration: 1.2,
+          ease: "elastic.out(1, 0.3)",
+          stagger: 0.15,
           scrollTrigger: {
             trigger: statsRef.current,
             start: "top 80%",
@@ -59,127 +170,163 @@ const Home = () => {
         }
       );
 
-      // Features Animation
+      // Enhanced Features Animation with 3D effects
       gsap.fromTo('.feature-card', 
-        { opacity: 0, y: 50 },
+        { opacity: 0, y: 100, rotationX: -15, scale: 0.8 },
         {
-          opacity: 1, y: 0,
-          duration: 0.8,
-          stagger: 0.15,
+          opacity: 1, 
+          y: 0, 
+          rotationX: 0,
+          scale: 1,
+          duration: 1.2,
+          ease: "power3.out",
+          stagger: 0.2,
           scrollTrigger: {
             trigger: featuresRef.current,
             start: "top 80%",
+            end: "bottom 20%",
+            toggleActions: "play none none reverse"
           }
         }
       );
 
-      // Courses Animation
+      // Feature card hover animations
+      gsap.set('.feature-card', { transformOrigin: "center center" });
+
+      // Enhanced Courses Animation with magnetic effect
       gsap.fromTo('.course-item', 
-        { opacity: 0, scale: 0.9 },
+        { opacity: 0, scale: 0.8, y: 80, rotationY: -20 },
         {
-          opacity: 1, scale: 1,
-          duration: 0.7,
-          stagger: 0.2,
+          opacity: 1, 
+          scale: 1, 
+          y: 0,
+          rotationY: 0,
+          duration: 1.0,
+          ease: "back.out(1.7)",
+          stagger: 0.25,
           scrollTrigger: {
             trigger: coursesRef.current,
             start: "top 80%",
+            end: "bottom 20%",
+            toggleActions: "play none none reverse"
           }
         }
       );
 
-      // Why Choose Us Animation
+      // Enhanced Why Choose Us Animation with slide and fade
       gsap.fromTo('.why-item', 
-        { opacity: 0, x: -50 },
+        { opacity: 0, x: -100, rotation: -5 },
         {
-          opacity: 1, x: 0,
-          duration: 0.6,
-          stagger: 0.1,
+          opacity: 1, 
+          x: 0, 
+          rotation: 0,
+          duration: 0.8,
+          ease: "power2.out",
+          stagger: 0.15,
           scrollTrigger: {
             trigger: whyChooseRef.current,
             start: "top 80%",
+            end: "bottom 20%",
+            toggleActions: "play none none reverse"
           }
         }
       );
 
-      // Success Stories Animation
+      // Enhanced Success Stories Animation with bounce
       gsap.fromTo('.success-metric', 
-        { opacity: 0, scale: 0.8 },
+        { opacity: 0, scale: 0.5, y: 50, rotation: 10 },
         {
-          opacity: 1, scale: 1,
-          duration: 0.6,
-          stagger: 0.1,
+          opacity: 1, 
+          scale: 1, 
+          y: 0,
+          rotation: 0,
+          duration: 0.8,
+          ease: "elastic.out(1, 0.3)",
+          stagger: 0.2,
           scrollTrigger: {
             trigger: successRef.current,
             start: "top 80%",
+            end: "bottom 20%",
+            toggleActions: "play none none reverse"
           }
         }
       );
 
-      // Testimonials Animation
+      // Enhanced Testimonials Animation with wave effect
       gsap.fromTo('.testimonial-card', 
-        { opacity: 0, y: 30 },
+        { opacity: 0, y: 60, scale: 0.9, rotationX: 15 },
         {
-          opacity: 1, y: 0,
-          duration: 0.7,
-          stagger: 0.2,
+          opacity: 1, 
+          y: 0, 
+          scale: 1,
+          rotationX: 0,
+          duration: 1.0,
+          ease: "power3.out",
+          stagger: 0.3,
           scrollTrigger: {
             trigger: testimonialsRef.current,
             start: "top 80%",
+            end: "bottom 20%",
+            toggleActions: "play none none reverse"
           }
         }
       );
 
-      // Instructors Animation
+      // Enhanced Instructors Animation with flip effect
       gsap.fromTo('.instructor-card', 
-        { opacity: 0, y: 40 },
+        { opacity: 0, y: 80, rotationY: -90, scale: 0.8 },
         {
-          opacity: 1, y: 0,
-          duration: 0.6,
-          stagger: 0.15,
+          opacity: 1, 
+          y: 0, 
+          rotationY: 0,
+          scale: 1,
+          duration: 1.2,
+          ease: "power3.out",
+          stagger: 0.2,
           scrollTrigger: {
             trigger: instructorsRef.current,
             start: "top 80%",
+            end: "bottom 20%",
+            toggleActions: "play none none reverse"
           }
         }
       );
 
-      // Pricing Animation
-      gsap.fromTo('.pricing-card', 
-        { opacity: 0, y: 50 },
-        {
-          opacity: 1, y: 0,
-          duration: 0.8,
-          stagger: 0.2,
-          scrollTrigger: {
-            trigger: pricingRef.current,
-            start: "top 80%",
-          }
-        }
-      );
-
-      // FAQ Animation
+      // Enhanced FAQ Animation with accordion effect
       gsap.fromTo('.faq-item', 
-        { opacity: 0, x: -30 },
+        { opacity: 0, x: -60, scale: 0.95, height: 0 },
         {
-          opacity: 1, x: 0,
-          duration: 0.5,
-          stagger: 0.1,
+          opacity: 1, 
+          x: 0, 
+          scale: 1,
+          height: "auto",
+          duration: 0.8,
+          ease: "power2.out",
+          stagger: 0.15,
           scrollTrigger: {
             trigger: faqRef.current,
             start: "top 80%",
+            end: "bottom 20%",
+            toggleActions: "play none none reverse"
           }
         }
       );
 
-      // CTA Animation
+      // Enhanced CTA Animation with dramatic entrance
       gsap.fromTo('.cta-content', 
-        { opacity: 0, y: 50 },
+        { opacity: 0, y: 100, scale: 0.8, rotationX: 20 },
         {
-          opacity: 1, y: 0,
-          duration: 1,
+          opacity: 1, 
+          y: 0, 
+          scale: 1,
+          rotationX: 0,
+          duration: 1.5,
+          ease: "power3.out",
           scrollTrigger: {
             trigger: ctaRef.current,
             start: "top 80%",
+            end: "bottom 20%",
+            toggleActions: "play none none reverse"
           }
         }
       );
@@ -194,6 +341,122 @@ const Home = () => {
         stagger: 0.3
       });
 
+      // Parallax scrolling effects
+      gsap.to('.parallax-bg', {
+        yPercent: -50,
+        ease: "none",
+        scrollTrigger: {
+          trigger: "body",
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true
+        }
+      });
+
+      // Text reveal animations
+      gsap.utils.toArray('.reveal-text').forEach((text: any) => {
+        gsap.fromTo(text, 
+          { opacity: 0, y: 50 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: text,
+              start: "top 85%",
+              toggleActions: "play none none reverse"
+            }
+          }
+        );
+      });
+
+      // Market Widget Animations REMOVED to show data immediately
+
+      // Add data flow animation to market widgets
+      gsap.utils.toArray('.market-widget').forEach((widget: any) => {
+        gsap.to(widget, {
+          boxShadow: "0 0 20px rgba(59, 130, 246, 0.3)",
+          duration: 2,
+          ease: "power2.inOut",
+          yoyo: true,
+          repeat: -1,
+          stagger: 0.5
+        });
+      });
+
+      // Magnetic button effect
+      gsap.utils.toArray('.magnetic-btn').forEach((btn: any) => {
+        btn.addEventListener('mousemove', (e: MouseEvent) => {
+          const rect = btn.getBoundingClientRect();
+          const x = e.clientX - rect.left - rect.width / 2;
+          const y = e.clientY - rect.top - rect.height / 2;
+          
+          gsap.to(btn, {
+            x: x * 0.1,
+            y: y * 0.1,
+            duration: 0.3,
+            ease: "power2.out"
+          });
+        });
+        
+        btn.addEventListener('mouseleave', () => {
+          gsap.to(btn, {
+            x: 0,
+            y: 0,
+            duration: 0.5,
+            ease: "elastic.out(1, 0.3)"
+          });
+        });
+      });
+
+      // Add advanced morphing effects to feature cards
+      gsap.utils.toArray('.feature-card').forEach((card: any) => {
+        card.addEventListener('mouseenter', () => {
+          gsap.to(card, {
+            scale: 1.05,
+            rotationY: 5,
+            rotationX: 5,
+            z: 50,
+            duration: 0.3,
+            ease: "power2.out"
+          });
+        });
+        
+        card.addEventListener('mouseleave', () => {
+          gsap.to(card, {
+            scale: 1,
+            rotationY: 0,
+            rotationX: 0,
+            z: 0,
+            duration: 0.3,
+            ease: "power2.out"
+          });
+        });
+      });
+
+      // Add data stream effect to course items
+      gsap.utils.toArray('.course-item').forEach((course: any) => {
+        ScrollTrigger.create({
+          trigger: course,
+          start: "top 80%",
+          onEnter: () => {
+            gsap.fromTo(course, 
+              { 
+                background: "linear-gradient(45deg, transparent, transparent)",
+                borderColor: "rgb(229, 231, 235)"
+              },
+              { 
+                background: "linear-gradient(45deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1))",
+                borderColor: "rgb(59, 130, 246)",
+                duration: 1,
+                ease: "power2.out"
+              }
+            );
+          }
+        });
+      });
+
     }, heroRef);
 
     return () => ctx.revert();
@@ -203,100 +466,48 @@ const Home = () => {
     {
       title: "Stock Market Fundamentals",
       description: "Perfect foundation for beginners",
-      duration: "6 weeks",
+      duration: "4 weeks",
       level: "Beginner",
-      price: "$299",
+      price: "₹15,000",
       icon: <BookOpen className="h-8 w-8" />,
-      features: ["Market basics", "Investment principles", "Risk management"]
+      features: ["Market basics & segments","Investment planning & risk control","Trader types, IPOs & psychology","Intro to charting software"]
     },
     {
-      title: "Technical Analysis Mastery",
+      title: "Technical + Derivatives Mastery",
       description: "Advanced chart reading techniques",
       duration: "8 weeks",
       level: "Intermediate",
-      price: "$599",
+      price: "₹20,000",
       icon: <BarChart className="h-8 w-8" />,
-      features: ["Chart patterns", "Technical indicators", "Trend analysis"]
+      features: ["Advanced technical analysis tools","Sector & index trend trading","Futures, options & Greeks","Gap strategies, MCX & intraday","Backtesting, mentorship & certification"]
     },
     {
-      title: "Options Trading Pro",
+      title: "Stock Market Mastery Program",
       description: "Master complex options strategies",
-      duration: "10 weeks",
+      duration: "12 weeks",
       level: "Advanced",
-      price: "$899",
+      price: "₹35,000",
       icon: <TrendingUp className="h-8 w-8" />,
-      features: ["Options Greeks", "Advanced strategies", "Risk hedging"]
+      features: ["Stock Market Fundamentals","Technical analysis","Derivatives"]
     }
   ];
 
   const instructors = [
     {
-      name: "Michael Davis",
-      title: "Founder & Chief Instructor",
-      experience: "15+ years Wall Street",
+      name: "Nainesh Patel",
+      title: "Founder & CEO",
+      experience: "2+ years Institutional",
       specialty: "Day Trading & Options",
-      image: "MD"
+      image: "/images/nainesh-patel.png",
+      profileLink: "/instructor/nainesh-patel"
     },
     {
-      name: "Sarah Kim",
+      name: "Kaushal Patel",
       title: "Head of Curriculum",
-      experience: "12+ years Hedge Funds",
+      experience: "2+ years Institutional",
       specialty: "Fundamental Analysis",
-      image: "SK"
-    },
-    {
-      name: "James Rodriguez",
-      title: "Technical Analysis Expert",
-      experience: "10+ years Institutional",
-      specialty: "Algorithmic Trading",
-      image: "JR"
-    }
-  ];
-
-  const pricingPlans = [
-    {
-      name: "Starter",
-      price: "$99",
-      period: "/month",
-      description: "Perfect for beginners starting their trading journey",
-      features: [
-        "Access to 3 beginner courses",
-        "Basic trading simulator",
-        "Community forum access",
-        "Weekly market updates",
-        "Email support"
-      ],
-      popular: false
-    },
-    {
-      name: "Professional",
-      price: "$299",
-      period: "/month",
-      description: "Comprehensive training for serious traders",
-      features: [
-        "Access to all courses",
-        "Advanced trading simulator",
-        "Live trading sessions",
-        "1-on-1 mentoring (2hrs/month)",
-        "Priority support",
-        "Market analysis reports"
-      ],
-      popular: true
-    },
-    {
-      name: "Elite",
-      price: "$599",
-      period: "/month",
-      description: "Premium experience with exclusive benefits",
-      features: [
-        "Everything in Professional",
-        "Unlimited 1-on-1 mentoring",
-        "Private Discord channel",
-        "Exclusive trading strategies",
-        "Portfolio review sessions",
-        "Direct instructor access"
-      ],
-      popular: false
+      image: "/images/kaushal-patel.png",
+      profileLink: "/instructor/kaushal-patel"
     }
   ];
 
@@ -329,131 +540,41 @@ const Home = () => {
 
   return (
     <div ref={heroRef} className="pt-20">
-      {/* Enhanced Hero Section */}
-      <section className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-transparent"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
-          <div>
-            <div className="inline-block bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold mb-6">
-              🎯 #1 Trading Education Platform
-            </div>
-            <h1 className="hero-title text-6xl lg:text-7xl font-bold text-blue-900 mb-6 leading-tight">
-              Master the
-              <span className="text-blue-600 block"> Stock Market</span>
-              <span className="text-gray-700 text-3xl lg:text-4xl block mt-2">Like a Pro</span>
-            </h1>
-            <p className="hero-subtitle text-xl text-gray-600 mb-8 leading-relaxed max-w-lg">
-              Transform your financial future with our comprehensive trading education. 
-              Learn from Wall Street experts and join 5,000+ successful traders worldwide.
-            </p>
-            <div className="hero-cta flex flex-col sm:flex-row gap-4 mb-8">
-              <button className="bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-300 flex items-center justify-center group shadow-lg">
-                Start Free Trial
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-              <button className="border-2 border-blue-600 text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-blue-600 hover:text-white transition-all duration-300 flex items-center justify-center">
-                <Play className="mr-2 h-5 w-5" />
-                Watch Demo
-              </button>
-            </div>
-            <div className="flex items-center space-x-6 text-sm text-gray-600">
-              <div className="flex items-center">
-                <Star className="h-5 w-5 text-yellow-400 mr-1" />
-                <span className="font-semibold">4.9/5</span> (2,500+ reviews)
-              </div>
-              <div className="flex items-center">
-                <Users className="h-5 w-5 text-blue-600 mr-1" />
-                <span>5,000+ students</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="hero-image relative">
-            <div className="relative">
-              {/* Main Dashboard Card */}
-              <div className="floating-card bg-white rounded-2xl p-6 shadow-2xl transform rotate-2 relative z-10">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-gray-800">Trading Dashboard</h3>
-                  <span className="text-green-600 font-bold text-lg">+$12,847</span>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">AAPL</span>
-                    <span className="text-green-600 font-semibold">+12.3%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">MSFT</span>
-                    <span className="text-green-600 font-semibold">+8.9%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">TSLA</span>
-                    <span className="text-red-600 font-semibold">-2.1%</span>
-                  </div>
-                </div>
-                <div className="mt-4 bg-blue-50 rounded-lg p-3">
-                  <div className="text-xs text-blue-600 mb-1">Portfolio Growth</div>
-                  <div className="text-2xl font-bold text-blue-900">+24.7%</div>
-                </div>
-              </div>
-
-              {/* Floating Success Card */}
-              <div className="floating-card absolute -top-4 -right-4 bg-green-500 text-white rounded-xl p-4 shadow-lg transform -rotate-3 z-20">
-                <div className="flex items-center">
-                  <TrendingUp className="h-6 w-6 mr-2" />
-                  <div>
-                    <div className="text-sm opacity-90">This Month</div>
-                    <div className="font-bold">+$4,250</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating Stats Card */}
-              <div className="floating-card absolute -bottom-6 -left-4 bg-blue-600 text-white rounded-xl p-4 shadow-lg transform rotate-1 z-20">
-                <div className="flex items-center">
-                  <Award className="h-6 w-6 mr-2" />
-                  <div>
-                    <div className="text-sm opacity-90">Win Rate</div>
-                    <div className="font-bold">87%</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Interactive 3D Hero Section */}
+      <Interactive3DHero />
 
       {/* Enhanced Stats Section */}
       <section ref={statsRef} className="py-20 bg-blue-900 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-800 to-blue-900"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-white mb-4">Trusted by Thousands of Traders</h2>
-            <p className="text-xl text-blue-200">Real results from real students</p>
+          <div className="text-centfer mb-12">
+            <h2 className="reveal-text text-4xl font-bold text-white mb-4">Trusted by Thousands of Traders</h2>
+            <p className="reveal-text text-xl text-blue-200">Real results from real students</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="bg-blue-800 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+              <div className="stat-icon bg-blue-800 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center animate-float">
                 <Users className="h-10 w-10 text-white" />
               </div>
               <div className="stat-number text-5xl font-bold text-white mb-2" data-count="100">0</div>
               <p className="text-blue-200 font-medium">Students Trained</p>
             </div>
             <div className="text-center">
-              <div className="bg-blue-800 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+              <div className="stat-icon bg-blue-800 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center animate-float">
                 <DollarSign className="h-10 w-10 text-white" />
               </div>
               <div className="stat-number text-5xl font-bold text-white mb-2" data-count="15">0</div>
               <p className="text-blue-200 font-medium">Lakhs in Profits</p>
             </div>
             <div className="text-center">
-              <div className="bg-blue-800 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+              <div className="stat-icon bg-blue-800 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center animate-float">
                 <Award className="h-10 w-10 text-white" />
               </div>
               <div className="stat-number text-5xl font-bold text-white mb-2" data-count="95">0</div>
               <p className="text-blue-200 font-medium">Success Rate %</p>
             </div>
             <div className="text-center">
-              <div className="bg-blue-800 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+              <div className="stat-icon bg-blue-800 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center animate-float">
                 <Globe className="h-10 w-10 text-white" />
               </div>
               <div className="stat-number text-5xl font-bold text-white mb-2" data-count="2">0</div>
@@ -467,15 +588,15 @@ const Home = () => {
       <section ref={featuresRef} className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold text-blue-900 mb-6">Why MarketPro Leads the Industry</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            <h2 className="reveal-text text-5xl font-bold text-blue-900 mb-6">Why Wealth Genius Leads the Industry</h2>
+            <p className="reveal-text text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               We combine cutting-edge technology with proven trading strategies to deliver 
               an unmatched learning experience that transforms beginners into profitable traders.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="feature-card bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 group">
+            <div className="feature-card bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 group hover-lift hover-glow">
               <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-2xl w-16 h-16 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <BookOpen className="h-8 w-8 text-white" />
               </div>
@@ -497,7 +618,7 @@ const Home = () => {
               </ul>
             </div>
 
-            <div className="feature-card bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 group">
+            <div className="feature-card bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 group hover-lift hover-glow">
               <div className="bg-gradient-to-br from-green-500 to-green-600 p-4 rounded-2xl w-16 h-16 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <TrendingUp className="h-8 w-8 text-white" />
               </div>
@@ -519,7 +640,7 @@ const Home = () => {
               </ul>
             </div>
 
-            <div className="feature-card bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 group">
+            <div className="feature-card bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 group hover-lift hover-glow">
               <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-4 rounded-2xl w-16 h-16 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Users className="h-8 w-8 text-white" />
               </div>
@@ -541,7 +662,7 @@ const Home = () => {
               </ul>
             </div>
 
-            <div className="feature-card bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 group">
+            <div className="feature-card bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 group hover-lift hover-glow">
               <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-4 rounded-2xl w-16 h-16 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Shield className="h-8 w-8 text-white" />
               </div>
@@ -563,7 +684,7 @@ const Home = () => {
               </ul>
             </div>
 
-            <div className="feature-card bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 group">
+            <div className="feature-card bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 group hover-lift hover-glow">
               <div className="bg-gradient-to-br from-teal-500 to-teal-600 p-4 rounded-2xl w-16 h-16 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Zap className="h-8 w-8 text-white" />
               </div>
@@ -585,7 +706,7 @@ const Home = () => {
               </ul>
             </div>
 
-            <div className="feature-card bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 group">
+            <div className="feature-card bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 group hover-lift hover-glow">
               <div className="bg-gradient-to-br from-red-500 to-red-600 p-4 rounded-2xl w-16 h-16 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <HeadphonesIcon className="h-8 w-8 text-white" />
               </div>
@@ -623,7 +744,7 @@ const Home = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {courses.map((course, index) => (
-              <div key={index} className="course-item bg-white border-2 border-gray-100 rounded-2xl shadow-lg hover:shadow-2xl hover:border-blue-200 transition-all duration-300 overflow-hidden group">
+              <div key={index} className="course-item bg-white border-2 border-gray-100 rounded-2xl shadow-lg hover:shadow-2xl hover:border-blue-200 transition-all duration-300 overflow-hidden group hover-lift hover-scale">
                 <div className="p-8">
                   <div className="flex items-center justify-between mb-6">
                     <div className="bg-blue-100 p-3 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
@@ -654,7 +775,10 @@ const Home = () => {
                     <div className="text-3xl font-bold text-blue-600">{course.price}</div>
                   </div>
 
-                  <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300 group-hover:shadow-lg">
+                  <button 
+                    onClick={() => handleEnrollClick(course)}
+                    className="magnetic-btn w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300 group-hover:shadow-lg"
+                  >
                     Enroll Now
                   </button>
                 </div>
@@ -663,7 +787,10 @@ const Home = () => {
           </div>
 
           <div className="text-center mt-12">
-            <button className="bg-gray-100 text-gray-700 px-8 py-4 rounded-lg font-semibold hover:bg-gray-200 transition-colors duration-300">
+            <button 
+              onClick={() => navigate('/courses')}
+              className="bg-gray-100 text-gray-700 px-8 py-4 rounded-lg font-semibold hover:bg-gray-200 transition-colors duration-300"
+            >
               View All Courses
             </button>
           </div>
@@ -783,7 +910,7 @@ const Home = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="success-metric bg-blue-800 rounded-2xl p-8 text-center">
-              <div className="text-4xl font-bold text-white mb-2">$2.3M</div>
+              <div className="text-4xl font-bold text-white mb-2">₹2.3M</div>
               <p className="text-blue-200 mb-4">Total Student Profits This Year</p>
               <div className="bg-blue-700 rounded-lg p-4">
                 <TrendingUp className="h-8 w-8 text-green-400 mx-auto mb-2" />
@@ -817,7 +944,7 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-bold text-blue-900 mb-6">What Our Students Say</h2>
-            <p className="text-xl text-gray-600">Hear from traders who transformed their lives with MarketPro</p>
+            <p className="text-xl text-gray-600">Hear from traders who transformed their lives with Wealth Genius</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -828,17 +955,17 @@ const Home = () => {
                 ))}
               </div>
               <blockquote className="text-gray-700 mb-6 text-lg leading-relaxed">
-                "MarketPro didn't just teach me to trade - they taught me to think like a professional trader. 
-                I went from losing money consistently to generating $15K+ monthly profits."
+                "Wealth Genius didn't just teach me to trade - they taught me to think like a professional trader. 
+                I went from losing money consistently to generating ₹100K+ monthly profits."
               </blockquote>
               <div className="flex items-center">
                 <div className="w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
                   JS
                 </div>
                 <div className="ml-4">
-                  <h4 className="font-bold text-gray-800">John Smith</h4>
+                  <h4 className="font-bold text-gray-800">Smit Patel</h4>
                   <p className="text-sm text-gray-600">Former Engineer → Full-Time Day Trader</p>
-                  <p className="text-xs text-green-600 font-semibold">+$180K Annual Profit</p>
+                  <p className="text-xs text-green-600 font-semibold">+₹1M Annual Profit</p>
                 </div>
               </div>
             </div>
@@ -858,9 +985,9 @@ const Home = () => {
                   MJ
                 </div>
                 <div className="ml-4">
-                  <h4 className="font-bold text-gray-800">Maria Johnson</h4>
+                  <h4 className="font-bold text-gray-800">Nayan Patel</h4>
                   <p className="text-sm text-gray-600">Marketing Manager → Swing Trader</p>
-                  <p className="text-xs text-green-600 font-semibold">+$85K Portfolio Growth</p>
+                  <p className="text-xs text-green-600 font-semibold">+₹85K Portfolio Growth</p>
                 </div>
               </div>
             </div>
@@ -880,9 +1007,9 @@ const Home = () => {
                   RD
                 </div>
                 <div className="ml-4">
-                  <h4 className="font-bold text-gray-800">Robert Davis</h4>
-                  <p className="text-sm text-gray-600">Retired Teacher → Options Trader</p>
-                  <p className="text-xs text-green-600 font-semibold">+$250K in 18 Months</p>
+                  <h4 className="font-bold text-gray-800">Love Patel</h4>
+                  <p className="text-sm text-gray-600">Business Man → Part Time Options Trader</p>
+                  <p className="text-xs text-green-600 font-semibold">+₹250K in 18 Months</p>
                 </div>
               </div>
             </div>
@@ -901,12 +1028,24 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 justify-center max-w-4xl mx-auto">
             {instructors.map((instructor, index) => (
               <div key={index} className="instructor-card bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
                 <div className="p-8 text-center">
-                  <div className="w-32 h-32 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full mx-auto mb-6 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-                    {instructor.image}
+                  <div className="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden shadow-lg">
+                    <img 
+                      src={instructor.image} 
+                      alt={instructor.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-3xl font-bold">${instructor.name.split(' ').map(n => n[0]).join('')}</div>`;
+                        }
+                      }}
+                    />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-800 mb-2">{instructor.name}</h3>
                   <p className="text-blue-600 font-semibold mb-2">{instructor.title}</p>
@@ -915,65 +1054,15 @@ const Home = () => {
                     <p className="text-sm text-blue-800 font-semibold">Specializes in:</p>
                     <p className="text-blue-600">{instructor.specialty}</p>
                   </div>
-                  <button className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300">
+                  <button 
+                    onClick={() => window.open(instructor.profileLink, '_blank')}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300 cursor-pointer"
+                  >
                     View Profile
                   </button>
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section ref={pricingRef} className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold text-blue-900 mb-6">Choose Your Learning Path</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Flexible pricing options designed to fit your budget and learning goals. 
-              Start your trading journey today with our comprehensive programs.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {pricingPlans.map((plan, index) => (
-              <div key={index} className={`pricing-card relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 ${plan.popular ? 'border-2 border-blue-500 transform scale-105' : 'border border-gray-200'}`}>
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-blue-500 text-white px-6 py-2 rounded-full text-sm font-semibold">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-                <div className="p-8">
-                  <h3 className="text-2xl font-bold text-gray-800 mb-2">{plan.name}</h3>
-                  <p className="text-gray-600 mb-6">{plan.description}</p>
-                  <div className="mb-6">
-                    <span className="text-5xl font-bold text-blue-600">{plan.price}</span>
-                    <span className="text-gray-600">{plan.period}</span>
-                  </div>
-                  <ul className="space-y-4 mb-8">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center text-gray-600">
-                        <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <button className={`w-full py-4 rounded-lg font-semibold transition-colors duration-300 ${plan.popular ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
-                    Get Started
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <p className="text-gray-600 mb-4">All plans include 30-day money-back guarantee</p>
-            <button className="text-blue-600 font-semibold hover:text-blue-700 transition-colors">
-              Compare All Features →
-            </button>
           </div>
         </div>
       </section>
@@ -1004,7 +1093,10 @@ const Home = () => {
 
           <div className="text-center mt-12">
             <p className="text-gray-600 mb-4">Still have questions?</p>
-            <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300">
+            <button 
+              onClick={() => window.open('tel:+919408611281', '_self')}
+              className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300"
+            >
               Contact Our Team
             </button>
           </div>
@@ -1018,17 +1110,17 @@ const Home = () => {
           <div className="cta-content text-center">
             <h2 className="text-6xl font-bold text-white mb-6">Ready to Transform Your Financial Future?</h2>
             <p className="text-2xl text-blue-100 mb-8 max-w-4xl mx-auto leading-relaxed">
-              Join thousands of successful traders who started their journey with MarketPro. 
+              Join thousands of successful traders who started their journey with Wealth Genius. 
               Take the first step towards financial independence today.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
-              <button className="bg-white text-blue-600 px-10 py-5 rounded-lg font-bold text-lg hover:bg-blue-50 transition-colors duration-300 shadow-lg">
-                Start Free 7-Day Trial
-              </button>
-              <button className="border-2 border-white text-white px-10 py-5 rounded-lg font-bold text-lg hover:bg-white hover:text-blue-600 transition-colors duration-300 flex items-center">
-                <Phone className="mr-2 h-6 w-6" />
-                Schedule Free Consultation
-              </button>
+            <button 
+              onClick={() => setShowScheduleModal(true)}
+              className="magnetic-btn border-2 border-white text-white px-10 py-5 rounded-lg font-bold text-lg hover:bg-white hover:text-blue-600 transition-colors duration-300 flex items-center"
+            >
+              <Phone className="mr-2 h-6 w-6" />
+              Schedule Free Consultation
+            </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
               <div className="flex items-center justify-center">
@@ -1047,6 +1139,129 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Enrollment Form Modal */}
+      {showEnrollmentForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-md my-4 sm:my-8 mx-2 sm:mx-auto">
+            <div className="max-h-[90vh] overflow-y-auto">
+              <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg sm:text-2xl font-bold text-gray-800 leading-tight">
+                    Enroll in {selectedCourse?.title}
+                  </h3>
+                  <button 
+                    onClick={closeModal}
+                    className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full flex-shrink-0 ml-2"
+                  >
+                    <X className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </button>
+                </div>
+                <p className="text-gray-600 mt-2 text-sm sm:text-base">
+                  Fill out the form below to start your trading journey
+                </p>
+              </div>
+            
+            <form onSubmit={handleFormSubmit} className="p-4 sm:p-6">
+              <div className="space-y-3 sm:space-y-4">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+                    City *
+                  </label>
+                  <input
+                    type="text"
+                    id="city"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base"
+                    placeholder="Enter your city"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base"
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base"
+                    placeholder="Enter your email address"
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <span className="text-gray-700 font-medium text-sm sm:text-base">Course Fee:</span>
+                  <span className="text-lg sm:text-2xl font-bold text-blue-600">{selectedCourse?.price}</span>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="w-full sm:flex-1 px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm sm:text-base"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="w-full sm:flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm sm:text-base"
+                  >
+                    Submit Enrollment
+                  </button>
+                </div>
+              </div>
+            </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Schedule Consultation Modal */}
+      <ScheduleModal 
+        isOpen={showScheduleModal} 
+        onClose={() => setShowScheduleModal(false)} 
+      />
     </div>
   );
 };

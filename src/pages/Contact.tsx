@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle } from 'lucide-react';
+import ScheduleModal from '../components/ScheduleModal';
 
 const Contact = () => {
   const contactRef = useRef(null);
@@ -12,6 +13,9 @@ const Contact = () => {
     course: '',
     message: ''
   });
+  
+  // Schedule modal state
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -89,8 +93,7 @@ const Contact = () => {
               <h3 className="text-lg font-semibold text-gray-800 mb-2">Call Us</h3>
               <p className="text-gray-600 mb-4">Speak with our education consultants</p>
               <a href="tel:+15551234567" className="text-blue-600 font-semibold hover:text-blue-700">
-                +1 (555) 123-4567
-              </a>
+                +91 96245 18383              </a>
               <p className="text-sm text-gray-500 mt-1">Mon-Fri 9AM-6PM EST</p>
             </div>
 
@@ -100,8 +103,8 @@ const Contact = () => {
               </div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">Email Us</h3>
               <p className="text-gray-600 mb-4">Get detailed information about courses</p>
-              <a href="mailto:info@marketpro.com" className="text-blue-600 font-semibold hover:text-blue-700">
-                info@marketpro.com
+              <a href="mailto:info@wealthgenius.com" className="text-blue-600 font-semibold hover:text-blue-700">
+                info@wealthgenius.com
               </a>
               <p className="text-sm text-gray-500 mt-1">24-48 hour response time</p>
             </div>
@@ -112,10 +115,18 @@ const Contact = () => {
               </div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">Visit Us</h3>
               <p className="text-gray-600 mb-4">Come for a campus tour</p>
-              <address className="text-blue-600 font-semibold not-italic">
-                123 Financial District<br />
-                New York, NY 10004
-              </address>
+              <a 
+                href="https://maps.app.goo.gl/417qktSTh8WfSNCu8" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 font-semibold hover:text-blue-700 transition-colors duration-200"
+              >
+                <address className="not-italic">
+                  409/ Golden Square, Near,<br />
+                  Kalyan Chowk, Nikol<br />
+                  Ahmedabad, Gujarat - 382350
+                </address>
+              </a>
             </div>
 
             <div className="contact-card text-center">
@@ -209,12 +220,9 @@ const Contact = () => {
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                       >
                         <option value="">Select a course</option>
-                        <option value="fundamentals">Stock Market Fundamentals</option>
-                        <option value="technical">Technical Analysis Mastery</option>
-                        <option value="options">Options Trading Strategies</option>
-                        <option value="daytrading">Day Trading Bootcamp</option>
-                        <option value="portfolio">Portfolio Management</option>
-                        <option value="algorithmic">Algorithmic Trading</option>
+                        <option value="Stock Market Fundamentals">Stock Market Fundamentals</option>
+                        <option value="Technical + Derivatives Mastery">Technical + Derivatives Mastery</option>
+                        <option value="Stock Market Mastery Program">Stock Market Mastery Program</option>
                       </select>
                     </div>
                   </div>
@@ -254,7 +262,15 @@ const Contact = () => {
                   <div className="text-center text-white">
                     <MapPin className="h-16 w-16 mx-auto mb-4 opacity-80" />
                     <h3 className="text-xl font-semibold mb-2">Find Us Here</h3>
-                    <p className="text-blue-100">123 Financial District, New York, NY 10004</p>
+                    <a 
+                      href="https://maps.app.goo.gl/417qktSTh8WfSNCu8" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-100 hover:text-white transition-colors duration-200"
+                    >
+                      409/ Golden Square, Near, Kalyan Chowk, Nikol<br />
+                      Ahmedabad, Gujarat - 382350
+                    </a>
                   </div>
                 </div>
                 <div className="p-6">
@@ -306,23 +322,30 @@ const Contact = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-blue-900">
+      <section className="py-20" style={{backgroundColor: '#1e40af'}}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold text-white mb-4">Ready to Start Trading?</h2>
           <p className="text-xl text-blue-200 mb-8 max-w-2xl mx-auto">
-            Join thousands of successful traders who started their journey with MarketPro. 
+            Join thousands of successful traders who started their journey with Wealth Genius. 
             Book a free consultation today!
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-blue-50 transition-colors duration-300">
-              Book Free Consultation
-            </button>
-            <button className="border border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors duration-300">
-              Download Course Brochure
+            <button 
+              onClick={() => setShowScheduleModal(true)}
+              className="magnetic-btn border-2 border-white text-white px-10 py-5 rounded-lg font-bold text-lg hover:bg-white hover:text-blue-600 transition-colors duration-300 flex items-center justify-center"
+            >
+              <Phone className="mr-2 h-6 w-6" />
+              Schedule Free Consultation
             </button>
           </div>
         </div>
       </section>
+
+      {/* Schedule Consultation Modal */}
+      <ScheduleModal 
+        isOpen={showScheduleModal} 
+        onClose={() => setShowScheduleModal(false)} 
+      />
     </div>
   );
 };

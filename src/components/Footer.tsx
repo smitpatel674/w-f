@@ -13,7 +13,7 @@ const Footer = () => {
                 <TrendingUp className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-bold">MarketPro</h3>
+                <h3 className="text-xl font-bold">Wealth Genius</h3>
                 <p className="text-sm text-blue-300">Trading Institute</p>
               </div>
             </div>
@@ -39,15 +39,22 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 text-blue-300" />
-                <span className="text-blue-200">+1 (555) 123-4567</span>
+                <span className="text-blue-200">+91 96245 18383</span>
               </li>
               <li className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-blue-300" />
-                <span className="text-blue-200">info@marketpro.com</span>
+                <span className="text-blue-200">info@wealthgenius.com</span>
               </li>
               <li className="flex items-center space-x-2">
                 <MapPin className="h-4 w-4 text-blue-300" />
-                <span className="text-blue-200">123 Financial District, NY</span>
+                <a 
+                  href="https://maps.app.goo.gl/417qktSTh8WfSNCu8" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-200 hover:text-white transition-colors"
+                >
+                  409/ Golden Square, Nikol, Ahmedabad
+                </a>
               </li>
             </ul>
           </div>
@@ -65,7 +72,7 @@ const Footer = () => {
               <a href="#" className="bg-blue-800 p-2 rounded-lg hover:bg-blue-700 transition-colors">
                 <Linkedin className="h-5 w-5" />
               </a>
-              <a href="#" className="bg-blue-800 p-2 rounded-lg hover:bg-blue-700 transition-colors">
+              <a href="https://www.instagram.com/wealthgenius_ahmedabad/" className="bg-blue-800 p-2 rounded-lg hover:bg-blue-700 transition-colors">
                 <Instagram className="h-5 w-5" />
               </a>
             </div>
@@ -73,7 +80,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-blue-800 mt-8 pt-8 text-center">
-          <p className="text-blue-300">&copy; 2025 MarketPro Trading Institute. All rights reserved.</p>
+          <p className="text-blue-300">&copy; 2025 Wealth Genius Trading Institute. All rights reserved.</p>
         </div>
       </div>
     </footer>
